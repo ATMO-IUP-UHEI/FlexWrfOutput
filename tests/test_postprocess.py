@@ -69,5 +69,6 @@ def test_make_attrs_consistent(flxout_path, header_path):
 def test_decode_times(flxout_path_deg, header_path_deg):
     output = combine(xr.open_dataset(flxout_path_deg), xr.open_dataset(header_path_deg))
     fixed_output = _decode_times(output)
-    assert "Time" in fixed_output.coords
-    assert np.issubdtype(fixed_output.Time.values.dtype, np.datetime64)
+    for time_variable in ["Time", "MTime"]:
+        assert time_variable in fixed_output.coords
+        assert np.issubdtype(fixed_output[time_variable].values.dtype, np.datetime64)

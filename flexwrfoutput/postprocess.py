@@ -56,11 +56,34 @@ def _decode_times(ds: xr.Dataset) -> xr.Dataset:
     """
     Read native time format of FLEXPART-WRF and assings respective datetimes as coordinate.
     """
+    # Set coordinates of output time
     unformatted_times = np.char.decode(ds.Times.values)
-    formatted_times = [
-        datetime.strptime(unformatted_time, "%Y%m%d_%H%M%S")
-        for unformatted_time in unformatted_times
-    ]
-    formatted_times = np.array(formatted_times, dtype=np.datetime64)
+    formatted_times = np.array(
+        [
+            datetime.strptime(unformatted_time, "%Y%m%d_%H%M%S")
+            for unformatted_time in unformatted_times
+        ],
+        dtype=np.datetime64,
+    )
+    # Use center of averaging interval as dimension
+    formatted_times += np.timedelta64(ds.attrs["AVERAGING_TIME"], "s") / 2
     ds = ds.assign_coords(Time=("Time", formatted_times))
+    ds.Time.attrs[
+        "description"
+    ] = "Times of footprint output (center of averaging interval)"
+
+    # Set measurement times as coordinate for releases
+    unformatted_simulation_start = str(ds.SIMULATION_START_DATE) + str(
+        ds.SIMULATION_START_TIME
+    )
+    simulation_start = np.datetime64(
+        datetime.strptime(unformatted_simulation_start, "%Y%m%d%H%M%S")
+    )
+    measurement_times = simulation_start + ds.ReleaseTstart_end.values.mean(
+        axis=1
+    ).astype("timedelta64[s]")
+    ds = ds.assign_coords(MTime=("releases", measurement_times))
+    ds.MTime.attrs[
+        "description"
+    ] = "Times of measurement for each release (center of release interval)"
     return ds
