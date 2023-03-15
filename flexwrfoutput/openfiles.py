@@ -10,7 +10,8 @@ import xarray as xr
 
 
 def combine(flxout: xr.Dataset, header: xr.Dataset) -> xr.Dataset:
-    """Combines dimensions of flxout with header to have full information of output in one xarray.
+    """Combines dimensions of flxout with header to have full information of output in\
+        one xarray.
 
     Args:
         flxout (xr.Dataset): Loaded flxout file.

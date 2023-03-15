@@ -5,8 +5,7 @@ max-line-length = 90
 extend-ignore =
     # See https://github.com/PyCQA/pycodestyle/issues/373
     E203,
-    # FIXME: Ignore until StaticArgument refactor
-    E501
+
 exclude =
   .git,
   .hg,
