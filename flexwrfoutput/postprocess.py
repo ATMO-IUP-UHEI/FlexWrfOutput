@@ -52,6 +52,15 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
     return ds
 
 
+def _make_dim_names_consistent(ds: xr.Dataset) -> xr.Dataset:
+    """
+    Change names that are not consistently set.
+    """
+    # if created with flexwrfinput z dim corresponds to z_stag
+    ds.rename(bottom_top="bottom_top_stag")
+    return ds
+
+
 def _decode_times(ds: xr.Dataset) -> xr.Dataset:
     """
     Read native time format of FLEXPART-WRF and assings respective datetimes as coordinate.
