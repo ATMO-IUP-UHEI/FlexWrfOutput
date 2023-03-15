@@ -19,7 +19,8 @@ def _prepare_conc_units(ds: xr.Dataset) -> xr.Dataset:
 
 def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
     """
-    Change attribute names and values of FLEXPART-WRF output to be compatible with xWRF postprocess.
+    Change attribute names and values of FLEXPART-WRF output to be compatible with xWRF \
+        postprocess.
     """
     # CEN_LAT and CEN_LON are given for the mother domain not the inner domain
     ds.attrs["MOAD_CEN_LAT"] = ds.attrs["CEN_LAT"]
@@ -63,7 +64,8 @@ def _make_dim_names_consistent(ds: xr.Dataset) -> xr.Dataset:
 
 def _decode_times(ds: xr.Dataset) -> xr.Dataset:
     """
-    Read native time format of FLEXPART-WRF and assings respective datetimes as coordinate.
+    Read native time format of FLEXPART-WRF and assings respective datetimes as \
+        coordinate.
     """
     # Set coordinates of output time
     unformatted_times = np.char.decode(ds.Times.values)
