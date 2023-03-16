@@ -22,8 +22,6 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
     Change attribute names and values of FLEXPART-WRF output to be compatible with xWRF \
         postprocess.
     """
-    # CEN_LAT and CEN_LON are given for the mother domain not the inner domain
-    ds.attrs["MOAD_CEN_LAT"] = ds.attrs["CEN_LAT"]
 
     ndims_lat = ds.dims["south_north"]
     ndims_lon = ds.dims["west_east"]
@@ -49,6 +47,7 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
         .mean()
         .values
     )
+    ds.attrs["MOAD_CEN_LAT"] = ds.attrs["CEN_LAT"]
 
     return ds
 
