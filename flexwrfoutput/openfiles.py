@@ -24,6 +24,10 @@ def combine(flxout: xr.Dataset, header: xr.Dataset) -> xr.Dataset:
     return combined
 
 
+class AmbiguousPathError(Exception):
+    pass
+
+
 def get_output_paths(path: Union[str, Path]) -> Tuple[Path, Path]:
     """Finds header and flxout files in directory and returns their paths.
 
@@ -34,15 +38,26 @@ def get_output_paths(path: Union[str, Path]) -> Tuple[Path, Path]:
         Tuple[Path, Path]: (flxout path, header path)
     """
     path = Path(path)
-    header_files = [file for file in path.iterdir() if "header" in str(file)]
-    flxout_files = [file for file in path.iterdir() if "flxout" in str(file)]
 
-    assert (
-        len(header_files) == 1
-    ), f"Didn't find unique header files in {path}: {header_files}"
-    assert (
-        len(flxout_files) == 1
-    ), f"Didn't find unique flxout file in {path}: {flxout_files}"
+    header_files = list(path.glob("header*"))
+    flxout_files = list(path.glob("flxout*"))
+
+    if len(header_files) == 0:
+        raise (
+            FileNotFoundError(f"Did not find a header file in given directory {path}")
+        )
+    if len(flxout_files) == 0:
+        raise (
+            FileNotFoundError(f"Did not find a flxout file in given directory {path}")
+        )
+    if len(header_files) > 1:
+        raise (
+            AmbiguousPathError(f"Found multiple header files in given directory {path}")
+        )
+    if len(flxout_files) > 1:
+        raise (
+            AmbiguousPathError(f"Found multiple flxout files in given directory {path}")
+        )
 
     return flxout_files[0], header_files[0]
 
