@@ -73,7 +73,5 @@ def open_output(output_dir: Union[str, Path]) -> xr.Dataset:
     """
     output_dir = Path(output_dir)
     flxout_path, header_path = get_output_paths(output_dir)
-    flxout = xr.open_dataset(flxout_path)
-    header = xr.open_dataset(header_path)
-    output = combine(flxout, header)
+    output = combine(xr.open_dataset(flxout_path), xr.open_dataset(header_path))
     return output
