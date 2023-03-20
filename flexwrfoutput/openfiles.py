@@ -9,7 +9,7 @@ from typing import Tuple, Union
 import xarray as xr
 
 
-def combine(flxout: xr.Dataset, header: xr.Dataset) -> xr.Dataset:
+def _combine_output_and_header(flxout: xr.Dataset, header: xr.Dataset) -> xr.Dataset:
     """Combines dimensions of flxout with header to have full information of output in\
         one xarray.
 
@@ -28,7 +28,7 @@ class AmbiguousPathError(Exception):
     pass
 
 
-def get_output_paths(path: Union[str, Path]) -> Tuple[Path, Path]:
+def _get_output_paths(path: Union[str, Path]) -> Tuple[Path, Path]:
     """Finds header and flxout files in directory and returns their paths.
 
     Args:
@@ -72,6 +72,8 @@ def open_output(output_dir: Union[str, Path]) -> xr.Dataset:
         xr.Dataset: Merged data.
     """
     output_dir = Path(output_dir)
-    flxout_path, header_path = get_output_paths(output_dir)
-    output = combine(xr.open_dataset(flxout_path), xr.open_dataset(header_path))
+    flxout_path, header_path = _get_output_paths(output_dir)
+    output = _combine_output_and_header(
+        xr.open_dataset(flxout_path), xr.open_dataset(header_path)
+    )
     return output

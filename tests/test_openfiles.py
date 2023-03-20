@@ -2,7 +2,11 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from flexwrfoutput.openfiles import combine, get_output_paths, open_output
+from flexwrfoutput.openfiles import (
+    _combine_output_and_header,
+    _get_output_paths,
+    open_output,
+)
 
 
 @pytest.fixture
@@ -81,14 +85,14 @@ def output_directory_empty(tmp_path):
 
 
 def test_combine(flxout, header):
-    combination = combine(flxout, header)
+    combination = _combine_output_and_header(flxout, header)
     assert "CONC" in combination.data_vars
     assert "XLONG" in combination.coords
 
 
 def test_get_output_paths(output_directory_empty):
     output_dir, filepaths = output_directory_empty
-    flxout_path, header_path = get_output_paths(output_dir)
+    flxout_path, header_path = _get_output_paths(output_dir)
     assert flxout_path == filepaths[0]
     assert header_path == filepaths[1]
 
@@ -96,8 +100,8 @@ def test_get_output_paths(output_directory_empty):
 @pytest.mark.xfail
 def test_fail_get_output_paths(output_directory_empty):
     output_dir, _ = output_directory_empty
-    output_dir / "flxout_test2.nc"
-    get_output_paths(output_dir)
+    (output_dir / "flxout_test2.nc").touch()
+    _get_output_paths(output_dir)
 
 
 def test_open_output(output_directory, flxout, header):
