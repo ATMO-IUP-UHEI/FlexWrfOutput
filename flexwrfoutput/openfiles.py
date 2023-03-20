@@ -87,9 +87,7 @@ def open_output(output_dir: Union[str, Path]) -> xr.Dataset:
     Returns:
         xr.Dataset: Merged data.
     """
-    output_dir = Path(output_dir)
-    flxout_path, header_path = _get_output_paths(output_dir)
-    output = _combine_output_and_header(
+    flxout_path, header_path = _get_output_paths(Path(output_dir))
+    return _combine_output_and_header(
         xr.open_dataset(flxout_path), xr.open_dataset(header_path)
     )
-    return output
