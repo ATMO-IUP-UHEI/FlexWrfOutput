@@ -42,21 +42,37 @@ def _get_output_paths(path: Union[str, Path]) -> Tuple[Path, Path]:
     header_files = list(path.glob("header*"))
     flxout_files = list(path.glob("flxout*"))
 
-    if len(header_files) == 0:
-        raise (
-            FileNotFoundError(f"Did not find a header file in given directory {path}")
+    if not (len(header_files) or len(flxout_files)):
+        missing_file = " or ".join(
+            [
+                fname
+                for fname, file_exists in [
+                    ("header", len(header_files)),
+                    ("flxout", len(flxout_files)),
+                ]
+                if not file_exists
+            ]
         )
-    if len(flxout_files) == 0:
         raise (
-            FileNotFoundError(f"Did not find a flxout file in given directory {path}")
+            FileNotFoundError(
+                f"Did not find a {missing_file} file in given directory {path}"
+            )
         )
-    if len(header_files) > 1:
-        raise (
-            AmbiguousPathError(f"Found multiple header files in given directory {path}")
+    elif len(header_files) > 1 or len(flxout_files) > 1:
+        duplicate_filetype = " and ".join(
+            [
+                fname
+                for fname, num_files in [
+                    ("header", len(header_files)),
+                    ("flxout", len(flxout_files)),
+                ]
+                if num_files > 1
+            ]
         )
-    if len(flxout_files) > 1:
         raise (
-            AmbiguousPathError(f"Found multiple flxout files in given directory {path}")
+            AmbiguousPathError(
+                f"Found multiple {duplicate_filetype} files in given directory {path}"
+            )
         )
 
     return flxout_files[0], header_files[0]
