@@ -107,5 +107,7 @@ def test_fail_get_output_paths(output_directory_empty):
 def test_open_output(output_directory, flxout, header):
     output_dir, filepaths = output_directory
     combination = open_output(output_dir)
+    # Coordinates all stored in header and not stored in "raw" CONC data so only
+    # "==" instead of .identical method
     assert (combination.CONC == flxout.CONC).all()
-    assert (combination.XLONG == header.XLONG).all()
+    assert combination.XLONG.identical(header.XLONG)
