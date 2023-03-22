@@ -52,12 +52,14 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
     return ds
 
 
-def _make_dim_names_consistent(ds: xr.Dataset) -> xr.Dataset:
+def _prepare_zdim(ds: xr.Dataset) -> xr.Dataset:
     """
     Change names that are not consistently set.
     """
     # if created with flexwrfinput z dim corresponds to z_stag
-    ds.rename(bottom_top="bottom_top_stag")
+    ds = ds.rename(bottom_top="bottom_top_stag")
+    ds = ds.assign_coords(z_height=("bottom_top_stag", ds.ZTOP.values))
+    ds.z_height.attrs = dict(description="Top of layer (above surface)", units="m")
     return ds
 
 
@@ -86,7 +88,6 @@ def _decode_times(ds: xr.Dataset) -> xr.Dataset:
     unformatted_simulation_start = str(ds.SIMULATION_START_DATE) + str(
         ds.SIMULATION_START_TIME
     ).zfill(6)
-    print(str(ds.SIMULATION_START_DATE), str(ds.SIMULATION_START_TIME))
     simulation_start = np.datetime64(
         datetime.strptime(unformatted_simulation_start, "%Y%m%d%H%M%S")
     )

@@ -10,6 +10,7 @@ from flexwrfoutput.postprocess import (
     _decode_times,
     _make_attrs_consistent,
     _prepare_conc_units,
+    _prepare_zdim,
 )
 
 FILE_EXAMPLES = Path(__file__).parent / "file_examples"
@@ -81,12 +82,7 @@ def test_decode_times_Times(flxout_path_deg, header_path_deg):
 
 
 def test_decode_times_START_TIME(flxout_path_deg, header_path_deg):
-    """Test special cases for SIMULATION_START_TIME
-
-    Args:
-        flxout_path_deg (_type_): _description_
-        header_path_deg (_type_): _description_
-    """
+    """Test special cases for SIMULATION_START_TIME"""
     output = _combine_output_and_header(
         xr.open_dataset(flxout_path_deg), xr.open_dataset(header_path_deg)
     )
@@ -95,3 +91,12 @@ def test_decode_times_START_TIME(flxout_path_deg, header_path_deg):
     _decode_times(output)
     output.attrs["SIMULATION_START_TIME"] = 1004
     _decode_times(output)
+
+
+def test_prepare_z_dim(flxout_path_deg, header_path_deg):
+    output = _combine_output_and_header(
+        xr.open_dataset(flxout_path_deg), xr.open_dataset(header_path_deg)
+    )
+    output = _prepare_zdim(output)
+    assert "bottom_top_stag" in output.dims
+    assert "z_height" in output.coords
