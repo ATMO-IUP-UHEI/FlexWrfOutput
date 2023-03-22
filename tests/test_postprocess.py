@@ -5,7 +5,7 @@ import pint
 import pytest
 import xarray as xr
 
-from flexwrfoutput.openfiles import combine
+from flexwrfoutput.openfiles import _combine_output_and_header
 from flexwrfoutput.postprocess import (
     _decode_times,
     _make_attrs_consistent,
@@ -33,7 +33,9 @@ def header_path_deg():
     ],
 )
 def test_prepare_conc_units(flxout_path, header_path):
-    output = combine(xr.open_dataset(flxout_path), xr.open_dataset(header_path))
+    output = _combine_output_and_header(
+        xr.open_dataset(flxout_path), xr.open_dataset(header_path)
+    )
     fixed_output = _prepare_conc_units(output)
     # should fail if conversion is not correct
     pint.Unit(fixed_output.CONC.units)
@@ -51,7 +53,9 @@ def test_prepare_conc_units(flxout_path, header_path):
     ],
 )
 def test_make_attrs_consistent(flxout_path, header_path):
-    output = combine(xr.open_dataset(flxout_path), xr.open_dataset(header_path))
+    output = _combine_output_and_header(
+        xr.open_dataset(flxout_path), xr.open_dataset(header_path)
+    )
     fixed_output = _make_attrs_consistent(output)
     needed_variables = [
         "CEN_LON",
@@ -66,9 +70,28 @@ def test_make_attrs_consistent(flxout_path, header_path):
         assert needed_variable in fixed_output.attrs.keys()
 
 
-def test_decode_times(flxout_path_deg, header_path_deg):
-    output = combine(xr.open_dataset(flxout_path_deg), xr.open_dataset(header_path_deg))
+def test_decode_times_Times(flxout_path_deg, header_path_deg):
+    output = _combine_output_and_header(
+        xr.open_dataset(flxout_path_deg), xr.open_dataset(header_path_deg)
+    )
     fixed_output = _decode_times(output)
     for time_variable in ["Time", "MTime"]:
         assert time_variable in fixed_output.coords
         assert np.issubdtype(fixed_output[time_variable].values.dtype, np.datetime64)
+
+
+def test_decode_times_START_TIME(flxout_path_deg, header_path_deg):
+    """Test special cases for SIMULATION_START_TIME
+
+    Args:
+        flxout_path_deg (_type_): _description_
+        header_path_deg (_type_): _description_
+    """
+    output = _combine_output_and_header(
+        xr.open_dataset(flxout_path_deg), xr.open_dataset(header_path_deg)
+    )
+    output.attrs["SIMULATION_START_TIME"] = 0
+    # check if format is casted correctly and conversion doesn't raise error
+    _decode_times(output)
+    output.attrs["SIMULATION_START_TIME"] = 1004
+    _decode_times(output)

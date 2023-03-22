@@ -9,7 +9,7 @@ from typing import Tuple, Union
 import xarray as xr
 
 
-def combine(flxout: xr.Dataset, header: xr.Dataset) -> xr.Dataset:
+def _combine_output_and_header(flxout: xr.Dataset, header: xr.Dataset) -> xr.Dataset:
     """Combines dimensions of flxout with header to have full information of output in\
         one xarray.
 
@@ -24,7 +24,11 @@ def combine(flxout: xr.Dataset, header: xr.Dataset) -> xr.Dataset:
     return combined
 
 
-def get_output_paths(path: Union[str, Path]) -> Tuple[Path, Path]:
+class AmbiguousPathError(Exception):
+    pass
+
+
+def _get_output_paths(path: Union[str, Path]) -> Tuple[Path, Path]:
     """Finds header and flxout files in directory and returns their paths.
 
     Args:
@@ -34,15 +38,42 @@ def get_output_paths(path: Union[str, Path]) -> Tuple[Path, Path]:
         Tuple[Path, Path]: (flxout path, header path)
     """
     path = Path(path)
-    header_files = [file for file in path.iterdir() if "header" in str(file)]
-    flxout_files = [file for file in path.iterdir() if "flxout" in str(file)]
 
-    assert (
-        len(header_files) == 1
-    ), f"Didn't find unique header files in {path}: {header_files}"
-    assert (
-        len(flxout_files) == 1
-    ), f"Didn't find unique flxout file in {path}: {flxout_files}"
+    header_files = list(path.glob("header*"))
+    flxout_files = list(path.glob("flxout*"))
+
+    if not (len(header_files) or len(flxout_files)):
+        missing_file = " or ".join(
+            [
+                fname
+                for fname, file_exists in [
+                    ("header", len(header_files)),
+                    ("flxout", len(flxout_files)),
+                ]
+                if not file_exists
+            ]
+        )
+        raise (
+            FileNotFoundError(
+                f"Did not find a {missing_file} file in given directory {path}"
+            )
+        )
+    elif len(header_files) > 1 or len(flxout_files) > 1:
+        duplicate_filetype = " and ".join(
+            [
+                fname
+                for fname, num_files in [
+                    ("header", len(header_files)),
+                    ("flxout", len(flxout_files)),
+                ]
+                if num_files > 1
+            ]
+        )
+        raise (
+            AmbiguousPathError(
+                f"Found multiple {duplicate_filetype} files in given directory {path}"
+            )
+        )
 
     return flxout_files[0], header_files[0]
 
@@ -56,9 +87,7 @@ def open_output(output_dir: Union[str, Path]) -> xr.Dataset:
     Returns:
         xr.Dataset: Merged data.
     """
-    output_dir = Path(output_dir)
-    flxout_path, header_path = get_output_paths(output_dir)
-    flxout = xr.open_dataset(flxout_path)
-    header = xr.open_dataset(header_path)
-    output = combine(flxout, header)
-    return output
+    flxout_path, header_path = _get_output_paths(Path(output_dir))
+    return _combine_output_and_header(
+        xr.open_dataset(flxout_path), xr.open_dataset(header_path)
+    )

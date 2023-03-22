@@ -85,7 +85,8 @@ def _decode_times(ds: xr.Dataset) -> xr.Dataset:
     # Set measurement times as coordinate for releases
     unformatted_simulation_start = str(ds.SIMULATION_START_DATE) + str(
         ds.SIMULATION_START_TIME
-    )
+    ).zfill(6)
+    print(str(ds.SIMULATION_START_DATE), str(ds.SIMULATION_START_TIME))
     simulation_start = np.datetime64(
         datetime.strptime(unformatted_simulation_start, "%Y%m%d%H%M%S")
     )

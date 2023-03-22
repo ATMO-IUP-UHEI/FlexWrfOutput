@@ -4,7 +4,7 @@ import pytest
 import xarray as xr
 
 import flexwrfoutput  # noqa: F401
-from flexwrfoutput.openfiles import combine
+from flexwrfoutput.openfiles import _combine_output_and_header
 
 FILE_EXAMPLES = Path(__file__).parent / "file_examples"
 
@@ -17,5 +17,7 @@ FILE_EXAMPLES = Path(__file__).parent / "file_examples"
     ],
 )
 def test_postprocess(flxout_path, header_path):
-    output = combine(xr.open_dataset(flxout_path), xr.open_dataset(header_path))
+    output = _combine_output_and_header(
+        xr.open_dataset(flxout_path), xr.open_dataset(header_path)
+    )
     output.flexwrf.postprocess()
