@@ -14,7 +14,7 @@ from flexwrfoutput.postprocess import (
     _decode_times,
     _make_attrs_consistent,
     _prepare_conc_units,
-    _prepare_zdim,
+    _prepare_coordinates,
 )
 
 
@@ -35,7 +35,7 @@ class FLEXWRFDatasetAccessor(FLEXWRFAccessor):
         ds = (
             self.xarray_obj.pipe(_prepare_conc_units)
             .pipe(_make_attrs_consistent)
-            .pipe(_prepare_zdim)
+            .pipe(_prepare_coordinates)
             .pipe(_decode_times)
             .pipe(_modify_attrs_to_cf)
             .pipe(_make_units_pint_friendly)

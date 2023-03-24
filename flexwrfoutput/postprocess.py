@@ -52,14 +52,30 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
     return ds
 
 
-def _prepare_zdim(ds: xr.Dataset) -> xr.Dataset:
+def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
     """
     Change names that are not consistently set.
     """
-    # if created with flexwrfinput z dim corresponds to z_stag
-    ds = ds.rename(bottom_top="bottom_top_stag")
+    # if created with flexwrfinput z dim corresponds to z_stag of WRF
+    ds = ds.rename_dims({"bottom_top": "bottom_top_stag"})
     ds = ds.assign_coords(z_height=("bottom_top_stag", ds.ZTOP.values))
     ds.z_height.attrs = dict(description="Top of layer (above surface)", units="m")
+    # Set measurement times as coordinate for releases
+    unformatted_simulation_start = str(ds.SIMULATION_START_DATE) + str(
+        ds.SIMULATION_START_TIME
+    ).zfill(6)
+    simulation_start = np.datetime64(
+        datetime.strptime(unformatted_simulation_start, "%Y%m%d%H%M%S")
+    )
+    measurement_times = simulation_start + ds.ReleaseTstart_end.values.mean(
+        axis=1
+    ).astype("timedelta64[s]")
+    ds = ds.assign_coords(MTime=("releases", measurement_times))
+    ds.MTime.attrs[
+        "description"
+    ] = "Times of measurement for each release (center of release interval)"
+    # Set release name as coordinate
+    ds = ds.assign_coords(releases_name=("releases", ds.ReleaseName.values))
     return ds
 
 
@@ -83,19 +99,4 @@ def _decode_times(ds: xr.Dataset) -> xr.Dataset:
     ds.Time.attrs[
         "description"
     ] = "Times of footprint output (center of averaging interval)"
-
-    # Set measurement times as coordinate for releases
-    unformatted_simulation_start = str(ds.SIMULATION_START_DATE) + str(
-        ds.SIMULATION_START_TIME
-    ).zfill(6)
-    simulation_start = np.datetime64(
-        datetime.strptime(unformatted_simulation_start, "%Y%m%d%H%M%S")
-    )
-    measurement_times = simulation_start + ds.ReleaseTstart_end.values.mean(
-        axis=1
-    ).astype("timedelta64[s]")
-    ds = ds.assign_coords(MTime=("releases", measurement_times))
-    ds.MTime.attrs[
-        "description"
-    ] = "Times of measurement for each release (center of release interval)"
     return ds
