@@ -3,6 +3,7 @@ import pytest
 import xarray as xr
 
 from flexwrfoutput.openfiles import (
+    AmbiguousPathError,
     _combine_output_and_header,
     _get_output_paths,
     open_output,
@@ -75,7 +76,7 @@ def output_directory(tmp_path, flxout, header):
 
 
 @pytest.fixture
-def output_directory_empty(tmp_path):
+def output_directory_empty_files(tmp_path):
     output_dir = tmp_path / "flexpart_output"
     output_dir.mkdir()
     filenames = ["flxout_test.nc", "header_test.nc", "other_file"]
@@ -90,18 +91,21 @@ def test_combine(flxout, header):
     assert "XLONG" in combination.coords
 
 
-def test_get_output_paths(output_directory_empty):
-    output_dir, filepaths = output_directory_empty
+def test_get_output_paths(output_directory_empty_files):
+    output_dir, filepaths = output_directory_empty_files
     flxout_path, header_path = _get_output_paths(output_dir)
     assert flxout_path == filepaths[0]
     assert header_path == filepaths[1]
 
 
 @pytest.mark.xfail
-def test_fail_get_output_paths(output_directory_empty):
-    output_dir, _ = output_directory_empty
+def test_fail_get_output_paths(output_directory_empty_files):
+    output_dir, _ = output_directory_empty_files
     (output_dir / "flxout_test2.nc").touch()
-    _get_output_paths(output_dir)
+    try:
+        _get_output_paths(output_dir)
+    except AmbiguousPathError as e:
+        assert str(e) == f"Did not find a header file in given directory {output_dir}"
 
 
 def test_open_output(output_directory, flxout, header):
