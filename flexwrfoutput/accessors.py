@@ -1,3 +1,5 @@
+"""Define xarray accessors to make FLEXPART-WRF output more consistent to WRF data
+    loaded via xWRF module."""
 from __future__ import annotations  # noqa: F401
 
 import xarray as xr

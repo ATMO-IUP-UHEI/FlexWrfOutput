@@ -19,7 +19,7 @@ def _prepare_conc_units(ds: xr.Dataset) -> xr.Dataset:
 
 def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
     """
-    Change attribute names and values of FLEXPART-WRF output to be compatible with xWRF \
+    Change attribute names and values of FLEXPART-WRF output to be compatible with xWRF
         postprocess.
     """
 
@@ -54,7 +54,7 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
 
 def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
     """
-    Change names that are not consistently set.
+    Set useful coordinates.
     """
     # if created with flexwrfinput z dim corresponds to z_stag of WRF
     ds = ds.rename_dims({"bottom_top": "bottom_top_stag"})
@@ -81,7 +81,7 @@ def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
 
 def _decode_times(ds: xr.Dataset) -> xr.Dataset:
     """
-    Read native time format of FLEXPART-WRF and assings respective datetimes as \
+    Read native time format of FLEXPART-WRF and assign respective datetimes as
         coordinate.
     """
     # Set coordinates of output time
