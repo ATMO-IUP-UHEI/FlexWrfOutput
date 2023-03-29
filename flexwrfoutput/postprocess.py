@@ -34,7 +34,7 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
     lon_center_index = (
         int(ndims_lon // 2)
         if ndims_lon % 2 == 1
-        else [int(ndims_lon // 2), int(ndims_lat // 2 - 1)]
+        else [int(ndims_lon // 2), int(ndims_lon // 2 - 1)]
     )
 
     ds.attrs["CEN_LAT"] = (
