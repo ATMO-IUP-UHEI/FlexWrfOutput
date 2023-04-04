@@ -67,8 +67,7 @@ def test_make_attrs_consistent(flxout_path, header_path):
         "MAP_PROJ",
         "STAND_LON",
     ]
-    for needed_variable in needed_variables:
-        assert needed_variable in fixed_output.attrs.keys()
+    assert set(needed_variables).issubset(fixed_output.attrs.keys())
 
 
 def test_decode_times_Times(flxout_path_deg, header_path_deg):
