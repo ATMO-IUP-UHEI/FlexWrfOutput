@@ -96,7 +96,7 @@ def _decode_times(ds: xr.Dataset) -> xr.Dataset:
     # Use center of averaging interval as dimension
     formatted_times += np.timedelta64(ds.attrs["AVERAGING_TIME"], "s") / 2
     ds = ds.assign_coords(Time=("Time", formatted_times))
-    ds.Time.attrs[
-        "description"
-    ] = "Times of footprint output (center of averaging interval)"
+    ds.Time.attrs["description"] = (
+        "Times of footprint output (center of averaging interval)"
+    )
     return ds
