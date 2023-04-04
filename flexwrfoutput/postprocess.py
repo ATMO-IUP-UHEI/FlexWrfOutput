@@ -71,9 +71,9 @@ def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
         axis=1
     ).astype("timedelta64[s]")
     ds = ds.assign_coords(MTime=("releases", measurement_times))
-    ds.MTime.attrs[
-        "description"
-    ] = "Times of measurement for each release (center of release interval)"
+    ds.MTime.attrs["description"] = (
+        "Times of measurement for each release (center of release interval)"
+    )
     # Set release name as coordinate
     ds = ds.assign_coords(releases_name=("releases", ds.ReleaseName.values))
     return ds
