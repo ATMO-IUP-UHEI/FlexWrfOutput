@@ -3,16 +3,9 @@
 from __future__ import annotations  # noqa: F401
 
 import xarray as xr
-from xwrf.postprocess import (
-    _assign_coord_to_dim_of_different_name,
-    _collapse_time_dim,
-    _include_projection_coordinates,
-    _make_units_pint_friendly,
-    _modify_attrs_to_cf,
-    _rename_dims,
-)
 
 from flexwrfoutput.postprocess import (
+    _apply_xwrf_pipes,
     _make_attrs_consistent,
     _prepare_conc_units,
     _prepare_coordinates,
@@ -37,11 +30,6 @@ class FLEXWRFDatasetAccessor(FLEXWRFAccessor):
             self.xarray_obj.pipe(_prepare_conc_units)
             .pipe(_make_attrs_consistent)
             .pipe(_prepare_coordinates)
-            .pipe(_modify_attrs_to_cf)
-            .pipe(_make_units_pint_friendly)
-            .pipe(_collapse_time_dim)
-            .pipe(_assign_coord_to_dim_of_different_name)
-            .pipe(_include_projection_coordinates)
-            .pipe(_rename_dims)
         )
+        ds = _apply_xwrf_pipes(ds)
         return ds

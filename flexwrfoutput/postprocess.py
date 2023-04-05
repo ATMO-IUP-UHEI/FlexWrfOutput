@@ -6,6 +6,14 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import xarray as xr
+from xwrf.postprocess import (
+    _assign_coord_to_dim_of_different_name,
+    _collapse_time_dim,
+    _include_projection_coordinates,
+    _make_units_pint_friendly,
+    _modify_attrs_to_cf,
+    _rename_dims,
+)
 
 
 def _prepare_conc_units(ds: xr.Dataset) -> xr.Dataset:
@@ -92,4 +100,16 @@ def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
     ds = _assign_time_coord(ds)
     # Set release name as coordinate
     ds = ds.assign_coords(releases_name=("releases", ds.ReleaseName.values))
+    return ds
+
+
+def _apply_xwrf_pipes(ds: xr.Dataset) -> xr.Dataset:
+    ds = (
+        ds.pipe(_modify_attrs_to_cf)
+        .pipe(_make_units_pint_friendly)
+        .pipe(_collapse_time_dim)
+        .pipe(_assign_coord_to_dim_of_different_name)
+        .pipe(_include_projection_coordinates)
+        .pipe(_rename_dims)
+    )
     return ds
