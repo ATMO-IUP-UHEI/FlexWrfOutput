@@ -4,6 +4,7 @@ Additional functions needed in preprocess to secure compatibility to xWRF
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 
@@ -23,30 +24,17 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
         postprocess.
     """
 
-    ndims_lat = ds.dims["south_north"]
-    ndims_lon = ds.dims["west_east"]
+    assert (ds.south_north == list(range(ds.dims["south_north"]))).all()
+    assert (ds.west_east == list(range(ds.dims["west_east"]))).all()
+    y_center_index = (ds.dims["south_north"] - 1) / 2
+    x_center_index = (ds.dims["west_east"] - 1) / 2
 
-    lat_center_index = (
-        int(ndims_lat // 2)
-        if ndims_lat % 2 == 1
-        else [int(ndims_lat // 2), int(ndims_lat // 2 - 1)]
-    )
-    lon_center_index = (
-        int(ndims_lon // 2)
-        if ndims_lon % 2 == 1
-        else [int(ndims_lon // 2), int(ndims_lon // 2 - 1)]
-    )
-
-    ds.attrs["CEN_LAT"] = (
-        ds.XLAT.isel(south_north=lat_center_index, west_east=lon_center_index)
-        .mean()
-        .values
-    )
-    ds.attrs["CEN_LON"] = (
-        ds.XLONG.isel(south_north=lat_center_index, west_east=lon_center_index)
-        .mean()
-        .values
-    )
+    ds.attrs["CEN_LAT"] = ds.XLAT.interp(
+        south_north=y_center_index, west_east=x_center_index
+    ).item()
+    ds.attrs["CEN_LON"] = ds.XLONG.interp(
+        south_north=y_center_index, west_east=x_center_index
+    ).item()
     ds.attrs["MOAD_CEN_LAT"] = ds.attrs["CEN_LAT"]
 
     return ds
@@ -71,9 +59,11 @@ def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
         axis=1
     ).astype("timedelta64[s]")
     ds = ds.assign_coords(MTime=("releases", measurement_times))
+    # fmt: off
     ds.MTime.attrs["description"] = (
         "Times of measurement for each release (center of release interval)"
     )
+    # fmt: on
     # Set release name as coordinate
     ds = ds.assign_coords(releases_name=("releases", ds.ReleaseName.values))
     return ds
@@ -84,19 +74,15 @@ def _decode_times(ds: xr.Dataset) -> xr.Dataset:
     Read native time format of FLEXPART-WRF and assign respective datetimes as
         coordinate.
     """
-    # Set coordinates of output time
-    unformatted_times = np.char.decode(ds.Times.values)
-    formatted_times = np.array(
-        [
-            datetime.strptime(unformatted_time, "%Y%m%d_%H%M%S")
-            for unformatted_time in unformatted_times
-        ],
-        dtype=np.datetime64,
+    formatted_times = pd.to_datetime(
+        ds.Times.data.astype("str"), errors="raise", format="%Y%m%d_%H%M%S"
     )
     # Use center of averaging interval as dimension
-    formatted_times += np.timedelta64(ds.attrs["AVERAGING_TIME"], "s") / 2
+    formatted_times += pd.Timedelta(ds.attrs["AVERAGING_TIME"], "seconds") / 2
     ds = ds.assign_coords(Time=("Time", formatted_times))
+    # fmt: off
     ds.Time.attrs["description"] = (
         "Times of footprint output (center of averaging interval)"
     )
+    # fmt: on
     return ds
