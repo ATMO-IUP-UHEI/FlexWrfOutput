@@ -16,14 +16,11 @@ from flexwrfoutput.postprocess import (
 FILE_EXAMPLES = Path(__file__).parent / "file_examples"
 
 
-@pytest.fixture
-def flxout_path_deg():
-    return FILE_EXAMPLES / "flxout_degree.nc"
-
-
-@pytest.fixture
-def header_path_deg():
-    return FILE_EXAMPLES / "header_degree.nc"
+@pytest.fixture(scope="session")
+def combined_flxout_ds(request):
+    return _combine_output_and_header(
+        xr.open_dataset(request.param[0]), xr.open_dataset(request.param[1])
+    )
 
 
 @pytest.mark.parametrize(
@@ -47,17 +44,15 @@ def test_prepare_conc_units(flxout_path, header_path):
 
 
 @pytest.mark.parametrize(
-    "flxout_path, header_path",
+    "combined_flxout_ds",
     [
         (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
         (FILE_EXAMPLES / "flxout_meters.nc", FILE_EXAMPLES / "header_meters.nc"),
     ],
+    indirect=True,
 )
-def test_make_attrs_consistent(flxout_path, header_path):
-    output = _combine_output_and_header(
-        xr.open_dataset(flxout_path), xr.open_dataset(header_path)
-    )
-    fixed_output = _make_attrs_consistent(output)
+def test_make_attrs_consistent(combined_flxout_ds):
+    fixed_output = _make_attrs_consistent(combined_flxout_ds)
     needed_variables = [
         "CEN_LON",
         "CEN_LAT",
@@ -70,23 +65,32 @@ def test_make_attrs_consistent(flxout_path, header_path):
     assert set(needed_variables).issubset(fixed_output.attrs.keys())
 
 
-def test_decode_times_Times(flxout_path_deg, header_path_deg):
-    output = _combine_output_and_header(
-        xr.open_dataset(flxout_path_deg), xr.open_dataset(header_path_deg)
-    )
-    fixed_output = _assign_time_coord(output)
+@pytest.mark.parametrize(
+    "combined_flxout_ds",
+    [
+        (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
+    ],
+    indirect=True,
+)
+def test_assign_time_coord(combined_flxout_ds):
+    fixed_output = _assign_time_coord(combined_flxout_ds)
     time_variable = "Time"
     assert time_variable in fixed_output.coords
     assert np.issubdtype(fixed_output[time_variable].values.dtype, np.datetime64)
 
 
-def test_prepare_coordinates(flxout_path_deg, header_path_deg):
-    output = _combine_output_and_header(
-        xr.open_dataset(flxout_path_deg), xr.open_dataset(header_path_deg)
-    )
-    output.attrs["SIMULATION_START_TIME"] = 0
-    output = _prepare_coordinates(output)
-    assert "bottom_top_stag" in output.dims
-    assert "z_height" in output.coords
-    assert "MTime" in output.coords
-    assert "releases_name" in output.coords
+@pytest.mark.parametrize(
+    "combined_flxout_ds",
+    [
+        (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
+    ],
+    indirect=True,
+)
+def test_prepare_coordinates(combined_flxout_ds):
+    combined_flxout_ds.attrs["SIMULATION_START_TIME"] = 0
+    combined_flxout_ds = _prepare_coordinates(combined_flxout_ds)
+    assert "bottom_top_stag" in combined_flxout_ds.dims
+    assert "z_height" in combined_flxout_ds.coords
+    assert "MTime" in combined_flxout_ds.coords
+    assert "Time" in combined_flxout_ds.coords
+    assert "releases_name" in combined_flxout_ds.coords
