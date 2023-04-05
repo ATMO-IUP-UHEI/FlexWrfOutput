@@ -7,7 +7,7 @@ import xarray as xr
 
 from flexwrfoutput.openfiles import _combine_output_and_header
 from flexwrfoutput.postprocess import (
-    _decode_times,
+    _assign_time_coord,
     _make_attrs_consistent,
     _prepare_conc_units,
     _prepare_coordinates,
@@ -74,7 +74,7 @@ def test_decode_times_Times(flxout_path_deg, header_path_deg):
     output = _combine_output_and_header(
         xr.open_dataset(flxout_path_deg), xr.open_dataset(header_path_deg)
     )
-    fixed_output = _decode_times(output)
+    fixed_output = _assign_time_coord(output)
     time_variable = "Time"
     assert time_variable in fixed_output.coords
     assert np.issubdtype(fixed_output[time_variable].values.dtype, np.datetime64)

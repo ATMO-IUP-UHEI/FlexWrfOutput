@@ -40,15 +40,7 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
     return ds
 
 
-def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
-    """
-    Set useful coordinates.
-    """
-    # if created with flexwrfinput z dim corresponds to z_stag of WRF
-    ds = ds.rename_dims({"bottom_top": "bottom_top_stag"})
-    ds = ds.assign_coords(z_height=("bottom_top_stag", ds.ZTOP.values))
-    ds.z_height.attrs = dict(description="Top of layer (above surface)", units="m")
-    # Set measurement times as coordinate for releases
+def _assign_measurement_time(ds: xr.Dataset) -> xr.Dataset:
     unformatted_simulation_start = str(ds.SIMULATION_START_DATE) + str(
         ds.SIMULATION_START_TIME
     ).zfill(6)
@@ -64,12 +56,10 @@ def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
         "Times of measurement for each release (center of release interval)"
     )
     # fmt: on
-    # Set release name as coordinate
-    ds = ds.assign_coords(releases_name=("releases", ds.ReleaseName.values))
     return ds
 
 
-def _decode_times(ds: xr.Dataset) -> xr.Dataset:
+def _assign_time_coord(ds: xr.Dataset) -> xr.Dataset:
     """
     Read native time format of FLEXPART-WRF and assign respective datetimes as
         coordinate.
@@ -85,4 +75,21 @@ def _decode_times(ds: xr.Dataset) -> xr.Dataset:
         "Times of footprint output (center of averaging interval)"
     )
     # fmt: on
+    return ds
+
+
+def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
+    """
+    Set useful coordinates.
+    """
+    # if created with flexwrfinput z dim corresponds to z_stag of WRF
+    ds = ds.rename_dims({"bottom_top": "bottom_top_stag"})
+    ds = ds.assign_coords(z_height=("bottom_top_stag", ds.ZTOP.values))
+    ds.z_height.attrs = dict(description="Top of layer (above surface)", units="m")
+    # Set measurement times as coordinate for releases
+    ds = _assign_measurement_time(ds)
+    # Set times as coordinates in datetime64 format
+    ds = _assign_time_coord(ds)
+    # Set release name as coordinate
+    ds = ds.assign_coords(releases_name=("releases", ds.ReleaseName.values))
     return ds
