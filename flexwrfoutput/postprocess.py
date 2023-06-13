@@ -82,9 +82,10 @@ def _assign_time_coord(ds: xr.Dataset) -> xr.Dataset:
 
 def _split_releases_into_multiple_dimensions(ds: xr.Dataset) -> xr.Dataset:
     """Split releases according to the time and name of the release."""
-    measurement_times = _extract_simulation_start(
-        ds
-    ) + ds.ReleaseTstart_end.values.mean(axis=1).astype("timedelta64[s]")
+    measurement_times = (
+        _extract_simulation_start(ds)
+        + ds.ReleaseTstart_end.values.mean(axis=1).astype("timedelta64[s]")
+    ).astype("datetime64[ns]")
 
     measurement_names = ds.ReleaseName.values
 
@@ -107,11 +108,11 @@ def _add_measurement_information(ds: xr.Dataset) -> xr.Dataset:
     measurement_start = (
         _extract_simulation_start(ds)
         + ds.ReleaseTstart_end.isel(MPlace=0, ReleaseStartEnd=0).values
-    )
+    ).astype("datetime64[ns]")
     measurement_end = (
         _extract_simulation_start(ds)
         + ds.ReleaseTstart_end.isel(MPlace=0, ReleaseStartEnd=1).values
-    )
+    ).astype("datetime64[ns]")
 
     measurement_x_east = ds.ReleaseXstart_end.isel(MTime=0, ReleaseStartEnd=0).values
     measurement_x_center = (
@@ -182,9 +183,11 @@ def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
     Set useful coordinates.
     """
     # if created with flexwrfinput z dim corresponds to z_stag of WRF
-    ds = ds.rename_dims({"bottom_top": "bottom_top_stag"})
-    ds = ds.assign_coords(z_height=("bottom_top_stag", ds.ZTOP.values))
-    ds.z_height.attrs = dict(description="Top of layer (above surface)", units="m")
+    ds = ds.rename_dims({"bottom_top": "z_stag"})
+    ds = ds.assign_coords(z_stag=("z_stag", ds.ZTOP.values))
+    ds.z_stag.attrs = dict(
+        description="Hight at top of layer (above surface)", units="m"
+    )
     # Set times as coordinates in datetime64 format
     ds = _assign_time_coord(ds)
     # take care of releases
