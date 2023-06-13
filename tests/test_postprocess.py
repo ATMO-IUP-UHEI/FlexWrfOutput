@@ -101,8 +101,11 @@ def test_prepare_coordinates(combined_flxout_ds):
     assert "MTime_start" in combined_flxout_ds.coords
     assert "MTime_end" in combined_flxout_ds.coords
     assert "MPlace_x_east" in combined_flxout_ds.coords
+    assert "MPlace_x_center" in combined_flxout_ds.coords
     assert "MPlace_x_west" in combined_flxout_ds.coords
     assert "MPlace_y_south" in combined_flxout_ds.coords
+    assert "MPlace_y_center" in combined_flxout_ds.coords
     assert "MPlace_y_north" in combined_flxout_ds.coords
     assert "MPlace_z_bottom" in combined_flxout_ds.coords
+    assert "MPlace_z_center" in combined_flxout_ds.coords
     assert "MPlace_z_top" in combined_flxout_ds.coords

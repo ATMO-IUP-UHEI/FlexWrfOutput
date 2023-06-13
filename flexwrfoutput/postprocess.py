@@ -190,7 +190,6 @@ def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
     # take care of releases
     ds = _split_releases_into_multiple_dimensions(ds)
     ds = _add_measurement_information(ds)
-
     return ds
 
 
