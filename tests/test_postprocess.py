@@ -69,6 +69,7 @@ def test_make_attrs_consistent(combined_flxout_ds):
     "combined_flxout_ds",
     [
         (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
+        (FILE_EXAMPLES / "flxout_meters.nc", FILE_EXAMPLES / "header_meters.nc"),
     ],
     indirect=True,
 )
@@ -83,14 +84,28 @@ def test_assign_time_coord(combined_flxout_ds):
     "combined_flxout_ds",
     [
         (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
+        (FILE_EXAMPLES / "flxout_meters.nc", FILE_EXAMPLES / "header_meters.nc"),
     ],
     indirect=True,
 )
 def test_prepare_coordinates(combined_flxout_ds):
     combined_flxout_ds.attrs["SIMULATION_START_TIME"] = 0
     combined_flxout_ds = _prepare_coordinates(combined_flxout_ds)
-    assert "bottom_top_stag" in combined_flxout_ds.dims
-    assert "z_height" in combined_flxout_ds.coords
-    assert "MTime" in combined_flxout_ds.coords
-    assert "Time" in combined_flxout_ds.coords
-    assert "releases_name" in combined_flxout_ds.coords
+
+    assert "z_stag" in combined_flxout_ds.dims
+    assert "MTime" in combined_flxout_ds.dims
+    assert "MPlace" in combined_flxout_ds.dims
+    assert "Time" in combined_flxout_ds.dims
+
+    assert "z_stag" in combined_flxout_ds.coords
+    assert "MTime_start" in combined_flxout_ds.coords
+    assert "MTime_end" in combined_flxout_ds.coords
+    assert "MPlace_x_east" in combined_flxout_ds.coords
+    assert "MPlace_x_center" in combined_flxout_ds.coords
+    assert "MPlace_x_west" in combined_flxout_ds.coords
+    assert "MPlace_y_south" in combined_flxout_ds.coords
+    assert "MPlace_y_center" in combined_flxout_ds.coords
+    assert "MPlace_y_north" in combined_flxout_ds.coords
+    assert "MPlace_z_bottom" in combined_flxout_ds.coords
+    assert "MPlace_z_center" in combined_flxout_ds.coords
+    assert "MPlace_z_top" in combined_flxout_ds.coords

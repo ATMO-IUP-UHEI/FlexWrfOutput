@@ -48,23 +48,17 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
     return ds
 
 
-def _assign_measurement_time(ds: xr.Dataset) -> xr.Dataset:
+def _extract_simulation_start(ds: xr.Dataset) -> np.ndarray:
+    """
+    Extract simulation start from FLEXPART-WRF output.
+    """
     unformatted_simulation_start = str(ds.SIMULATION_START_DATE) + str(
         ds.SIMULATION_START_TIME
     ).zfill(6)
     simulation_start = np.datetime64(
         datetime.strptime(unformatted_simulation_start, "%Y%m%d%H%M%S")
     )
-    measurement_times = simulation_start + ds.ReleaseTstart_end.values.mean(
-        axis=1
-    ).astype("timedelta64[s]")
-    ds = ds.assign_coords(MTime=("releases", measurement_times))
-    # fmt: off
-    ds.MTime.attrs["description"] = (
-        "Times of measurement for each release (center of release interval)"
-    )
-    # fmt: on
-    return ds
+    return simulation_start
 
 
 def _assign_time_coord(ds: xr.Dataset) -> xr.Dataset:
@@ -86,20 +80,119 @@ def _assign_time_coord(ds: xr.Dataset) -> xr.Dataset:
     return ds
 
 
+def _split_releases_into_multiple_dimensions(ds: xr.Dataset) -> xr.Dataset:
+    """Split releases according to the time and name of the release."""
+    measurement_times = (
+        _extract_simulation_start(ds)
+        + ds.ReleaseTstart_end.values.mean(axis=1).astype("timedelta64[s]")
+    ).astype("datetime64[ns]")
+
+    measurement_names = ds.ReleaseName.values
+
+    new_releases_coordinates = pd.MultiIndex.from_arrays(
+        (measurement_times, measurement_names),
+        names=("MTime", "MPlace"),
+    )
+
+    ds = ds.assign_coords(releases=new_releases_coordinates).unstack("releases")
+    ds.MTime.attrs[
+        "description"
+    ] = "Times of measurement for each release (center of release interval)"
+    ds.MPlace.attrs["description"] = "Names assigned to each release"
+    return ds
+
+
+def _add_measurement_information(ds: xr.Dataset) -> xr.Dataset:
+    """Add information about measurement to dataset in additionional coordiantes for MTime
+    and MPlace."""
+    measurement_start = (
+        _extract_simulation_start(ds)
+        + ds.ReleaseTstart_end.isel(MPlace=0, ReleaseStartEnd=0).values
+    ).astype("datetime64[ns]")
+    measurement_end = (
+        _extract_simulation_start(ds)
+        + ds.ReleaseTstart_end.isel(MPlace=0, ReleaseStartEnd=1).values
+    ).astype("datetime64[ns]")
+
+    measurement_x_east = ds.ReleaseXstart_end.isel(MTime=0, ReleaseStartEnd=0).values
+    measurement_x_center = (
+        ds.ReleaseXstart_end.isel(MTime=0).mean("ReleaseStartEnd").values
+    )
+    measurement_x_west = ds.ReleaseXstart_end.isel(MTime=0, ReleaseStartEnd=1).values
+    measurement_y_south = ds.ReleaseYstart_end.isel(MTime=0, ReleaseStartEnd=0).values
+    measurement_y_center = (
+        ds.ReleaseYstart_end.isel(MTime=0).mean("ReleaseStartEnd").values
+    )
+    measurement_y_north = ds.ReleaseYstart_end.isel(MTime=0, ReleaseStartEnd=1).values
+    measurement_z_bottom = ds.ReleaseZstart_end.isel(MTime=0, ReleaseStartEnd=0).values
+    measurement_z_center = (
+        ds.ReleaseZstart_end.isel(MTime=0).mean("ReleaseStartEnd").values
+    )
+    measurement_z_top = ds.ReleaseZstart_end.isel(MTime=0, ReleaseStartEnd=1).values
+
+    ds = ds.assign_coords(
+        MTime_start=("MTime", measurement_start),
+        MTime_end=("MTime", measurement_end),
+        MPlace_x_east=("MPlace", measurement_x_east),
+        MPlace_x_center=("MPlace", measurement_x_center),
+        MPlace_x_west=("MPlace", measurement_x_west),
+        MPlace_y_south=("MPlace", measurement_y_south),
+        MPlace_y_center=("MPlace", measurement_y_center),
+        MPlace_y_north=("MPlace", measurement_y_north),
+        MPlace_z_bottom=("MPlace", measurement_z_bottom),
+        MPlace_z_center=("MPlace", measurement_z_center),
+        MPlace_z_top=("MPlace", measurement_z_top),
+    )
+    ds.MTime_start.attrs["description"] = "Start time of measurement for each release"
+    ds.MTime_end.attrs["description"] = "End time of measurement for each release"
+    ds.MPlace_x_east.attrs[
+        "description"
+    ] = "East boundary of measurement for each release"
+    ds.MPlace_x_east.attrs["unit"] = "m"
+    ds.MPlace_x_center.attrs["description"] = "Center of measurement for each release"
+    ds.MPlace_x_center.attrs["unit"] = "m"
+    ds.MPlace_x_west.attrs[
+        "description"
+    ] = "West boundary of measurement for each release"
+    ds.MPlace_x_west.attrs["unit"] = "m"
+    ds.MPlace_y_south.attrs[
+        "description"
+    ] = "South boundary of measurement for each release"
+    ds.MPlace_y_south.attrs["unit"] = "m"
+    ds.MPlace_y_center.attrs["description"] = "Center of measurement for each release"
+    ds.MPlace_y_center.attrs["unit"] = "m"
+    ds.MPlace_y_north.attrs[
+        "description"
+    ] = "North boundary of measurement for each release"
+    ds.MPlace_y_north.attrs["unit"] = "m"
+    ds.MPlace_z_bottom.attrs[
+        "description"
+    ] = "Bottom boundary of measurement for each release"
+    ds.MPlace_z_bottom.attrs["unit"] = "m"
+    ds.MPlace_z_center.attrs["description"] = "Center of measurement for each release"
+    ds.MPlace_z_center.attrs["unit"] = "m"
+    ds.MPlace_z_top.attrs[
+        "description"
+    ] = "Top boundary of measurement for each release"
+    ds.MPlace_z_top.attrs["unit"] = "m"
+    return ds
+
+
 def _prepare_coordinates(ds: xr.Dataset) -> xr.Dataset:
     """
     Set useful coordinates.
     """
     # if created with flexwrfinput z dim corresponds to z_stag of WRF
-    ds = ds.rename_dims({"bottom_top": "bottom_top_stag"})
-    ds = ds.assign_coords(z_height=("bottom_top_stag", ds.ZTOP.values))
-    ds.z_height.attrs = dict(description="Top of layer (above surface)", units="m")
-    # Set measurement times as coordinate for releases
-    ds = _assign_measurement_time(ds)
+    ds = ds.rename_dims({"bottom_top": "z_stag"})
+    ds = ds.assign_coords(z_stag=("z_stag", ds.ZTOP.values))
+    ds.z_stag.attrs = dict(
+        description="Hight at top of layer (above surface)", units="m"
+    )
     # Set times as coordinates in datetime64 format
     ds = _assign_time_coord(ds)
-    # Set release name as coordinate
-    ds = ds.assign_coords(releases_name=("releases", ds.ReleaseName.values))
+    # take care of releases
+    ds = _split_releases_into_multiple_dimensions(ds)
+    ds = _add_measurement_information(ds)
     return ds
 
 
