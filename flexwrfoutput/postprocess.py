@@ -37,12 +37,16 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
     y_center_index = (ds.dims["south_north"] - 1) / 2
     x_center_index = (ds.dims["west_east"] - 1) / 2
 
-    ds.attrs["CEN_LAT"] = ds.XLAT.interp(
-        south_north=y_center_index, west_east=x_center_index
-    ).item()
-    ds.attrs["CEN_LON"] = ds.XLONG.interp(
-        south_north=y_center_index, west_east=x_center_index
-    ).item()
+    ds.attrs["CEN_LAT"] = (
+        ds.XLAT.interp(south_north=y_center_index, west_east=x_center_index)
+        .squeeze()
+        .values
+    )
+    ds.attrs["CEN_LON"] = (
+        ds.XLONG.interp(south_north=y_center_index, west_east=x_center_index)
+        .squeeze()
+        .values
+    )
     ds.attrs["MOAD_CEN_LAT"] = ds.attrs["CEN_LAT"]
 
     return ds
