@@ -12,8 +12,14 @@ FILE_EXAMPLES = Path(__file__).parent / "file_examples"
 @pytest.mark.parametrize(
     "flxout_path, header_path",
     [
-        (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
-        (FILE_EXAMPLES / "flxout_meters.nc", FILE_EXAMPLES / "header_meters.nc"),
+        (
+            FILE_EXAMPLES / "degree" / "flxout_degree.nc",
+            FILE_EXAMPLES / "degree" / "header_degree.nc",
+        ),
+        (
+            FILE_EXAMPLES / "meter" / "flxout_meters.nc",
+            FILE_EXAMPLES / "meter" / "header_meters.nc",
+        ),
     ],
 )
 def test_postprocess(flxout_path, header_path):
@@ -21,13 +27,20 @@ def test_postprocess(flxout_path, header_path):
         xr.open_dataset(flxout_path), xr.open_dataset(header_path)
     )
     output.flexwrf.postprocess()
+    assert output.CONC.chunks is None
 
 
 @pytest.mark.parametrize(
     "flxout_path, header_path",
     [
-        (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
-        (FILE_EXAMPLES / "flxout_meters.nc", FILE_EXAMPLES / "header_meters.nc"),
+        (
+            FILE_EXAMPLES / "degree" / "flxout_degree.nc",
+            FILE_EXAMPLES / "degree" / "header_degree.nc",
+        ),
+        (
+            FILE_EXAMPLES / "meter" / "flxout_meters.nc",
+            FILE_EXAMPLES / "meter" / "header_meters.nc",
+        ),
     ],
 )
 def test_dask_postprocess(flxout_path, header_path):

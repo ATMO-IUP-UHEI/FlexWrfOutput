@@ -115,3 +115,13 @@ def test_open_output(output_directory, flxout, header):
     # "==" instead of .identical method
     assert (combination.CONC == flxout.CONC).all()
     assert combination.XLONG.identical(header.XLONG)
+
+
+def test_dask_open_output(output_directory, flxout, header):
+    output_dir, filepaths = output_directory
+    combination = open_output(
+        output_dir, flxout_chunks={"Time": 1}, header_chunks={"releases": 1}
+    )
+    # Coordinates all stored in header and not stored in "raw" CONC data so only
+    # "==" instead of .identical method
+    assert combination.CONC.chunks is not None

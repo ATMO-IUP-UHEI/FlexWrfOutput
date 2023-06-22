@@ -26,8 +26,14 @@ def combined_flxout_ds(request):
 @pytest.mark.parametrize(
     "flxout_path, header_path",
     [
-        (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
-        (FILE_EXAMPLES / "flxout_meters.nc", FILE_EXAMPLES / "header_meters.nc"),
+        (
+            FILE_EXAMPLES / "degree" / "flxout_degree.nc",
+            FILE_EXAMPLES / "degree" / "header_degree.nc",
+        ),
+        (
+            FILE_EXAMPLES / "meter" / "flxout_meters.nc",
+            FILE_EXAMPLES / "meter" / "header_meters.nc",
+        ),
     ],
 )
 def test_prepare_conc_units(flxout_path, header_path):
@@ -46,8 +52,14 @@ def test_prepare_conc_units(flxout_path, header_path):
 @pytest.mark.parametrize(
     "combined_flxout_ds",
     [
-        (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
-        (FILE_EXAMPLES / "flxout_meters.nc", FILE_EXAMPLES / "header_meters.nc"),
+        (
+            FILE_EXAMPLES / "degree" / "flxout_degree.nc",
+            FILE_EXAMPLES / "degree" / "header_degree.nc",
+        ),
+        (
+            FILE_EXAMPLES / "meter" / "flxout_meters.nc",
+            FILE_EXAMPLES / "meter" / "header_meters.nc",
+        ),
     ],
     indirect=True,
 )
@@ -68,8 +80,14 @@ def test_make_attrs_consistent(combined_flxout_ds):
 @pytest.mark.parametrize(
     "combined_flxout_ds",
     [
-        (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
-        (FILE_EXAMPLES / "flxout_meters.nc", FILE_EXAMPLES / "header_meters.nc"),
+        (
+            FILE_EXAMPLES / "degree" / "flxout_degree.nc",
+            FILE_EXAMPLES / "degree" / "header_degree.nc",
+        ),
+        (
+            FILE_EXAMPLES / "meter" / "flxout_meters.nc",
+            FILE_EXAMPLES / "meter" / "header_meters.nc",
+        ),
     ],
     indirect=True,
 )
@@ -83,8 +101,14 @@ def test_assign_time_coord(combined_flxout_ds):
 @pytest.mark.parametrize(
     "combined_flxout_ds",
     [
-        (FILE_EXAMPLES / "flxout_degree.nc", FILE_EXAMPLES / "header_degree.nc"),
-        (FILE_EXAMPLES / "flxout_meters.nc", FILE_EXAMPLES / "header_meters.nc"),
+        (
+            FILE_EXAMPLES / "degree" / "flxout_degree.nc",
+            FILE_EXAMPLES / "degree" / "header_degree.nc",
+        ),
+        (
+            FILE_EXAMPLES / "meter" / "flxout_meters.nc",
+            FILE_EXAMPLES / "meter" / "header_meters.nc",
+        ),
     ],
     indirect=True,
 )
