@@ -11,6 +11,7 @@ from flexwrfoutput.postprocess import (
     _make_attrs_consistent,
     _prepare_conc_units,
     _prepare_coordinates,
+    _split_releases_into_multiple_dimensions,
 )
 
 FILE_EXAMPLES = Path(__file__).parent / "file_examples"
@@ -133,3 +134,29 @@ def test_prepare_coordinates(combined_flxout_ds):
     assert "MPlace_z_bottom" in combined_flxout_ds.coords
     assert "MPlace_z_center" in combined_flxout_ds.coords
     assert "MPlace_z_top" in combined_flxout_ds.coords
+
+
+@pytest.mark.parametrize(
+    "combined_flxout_ds",
+    [
+        (
+            FILE_EXAMPLES / "degree" / "flxout_degree.nc",
+            FILE_EXAMPLES / "degree" / "header_degree.nc",
+        ),
+        (
+            FILE_EXAMPLES / "meter" / "flxout_meters.nc",
+            FILE_EXAMPLES / "meter" / "header_meters.nc",
+        ),
+    ],
+    indirect=True,
+)
+def test_split_releases_into_multiple_dimensions(combined_flxout_ds):
+    ds = combined_flxout_ds.rename_dims({"bottom_top": "z_stag"})
+    ds = ds.assign_coords(z_stag=("z_stag", ds.ZTOP.values))
+    ds.z_stag.attrs = dict(
+        description="Hight at top of layer (above surface)", units="m"
+    )
+    ds = _assign_time_coord(ds)
+    ds = _split_releases_into_multiple_dimensions(ds)
+    assert "MTime" in ds.dims
+    assert "MPlace" in ds.dims
