@@ -4,6 +4,7 @@ from __future__ import annotations  # noqa: F401
 
 import xarray as xr
 
+from flexwrfoutput.add_wrf_projection import _add_wrf_projection
 from flexwrfoutput.postprocess import (
     _apply_xwrf_pipes,
     _make_attrs_consistent,
@@ -32,4 +33,11 @@ class FLEXWRFDatasetAccessor(FLEXWRFAccessor):
             .pipe(_prepare_coordinates)
         )
         ds = _apply_xwrf_pipes(ds)
+        return ds
+
+    def add_wrf_projection(self) -> xr.Dataset:
+        """
+        Add the wrf projection to the dataset.
+        """
+        ds = self.xarray_obj.pipe(_add_wrf_projection)
         return ds
