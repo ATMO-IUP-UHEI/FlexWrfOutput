@@ -4,7 +4,7 @@ Functions to handle raw netCDF output of FLEXPART-WRF.
 Meant to be used before the postprocessing with the accessor.
 """
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 import xarray as xr
 
@@ -78,7 +78,11 @@ def _get_output_paths(path: Union[str, Path]) -> Tuple[Path, Path]:
     return flxout_files[0], header_files[0]
 
 
-def open_output(output_dir: Union[str, Path]) -> xr.Dataset:
+def open_output(
+    output_dir: Union[str, Path],
+    flxout_chunks: Optional[dict] = None,
+    header_chunks: Optional[dict] = None,
+) -> xr.Dataset:
     """Finds output of FLEXPART-WRF in a directory and merges header and footprint data.
 
     Args:
@@ -89,5 +93,6 @@ def open_output(output_dir: Union[str, Path]) -> xr.Dataset:
     """
     flxout_path, header_path = _get_output_paths(Path(output_dir))
     return _combine_output_and_header(
-        xr.open_dataset(flxout_path), xr.open_dataset(header_path)
+        xr.open_dataset(flxout_path, chunks=flxout_chunks),
+        xr.open_dataset(header_path, chunks=header_chunks),
     )
