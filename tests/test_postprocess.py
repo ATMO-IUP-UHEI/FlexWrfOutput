@@ -97,6 +97,7 @@ def test_assign_time_coord(combined_flxout_ds):
     time_variable = "Time"
     assert time_variable in fixed_output.coords
     assert np.issubdtype(fixed_output[time_variable].values.dtype, np.datetime64)
+    assert fixed_output[time_variable][0].values == np.datetime64("2021-08-02T00:30:00")
 
 
 @pytest.mark.parametrize(
