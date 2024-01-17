@@ -74,7 +74,7 @@ def _assign_time_coord(ds: xr.Dataset) -> xr.Dataset:
         ds.Times.data.astype("str"), errors="raise", format="%Y%m%d_%H%M%S"
     )
     # Use center of averaging interval as dimension
-    formatted_times += pd.Timedelta(ds.attrs["AVERAGING_TIME"], "seconds") / 2
+    formatted_times -= pd.Timedelta(ds.attrs["AVERAGING_TIME"], "seconds") / 2
     ds = ds.assign_coords(Time=("Time", formatted_times))
     # fmt: off
     ds.Time.attrs["description"] = (
