@@ -111,11 +111,15 @@ def _add_measurement_information(ds: xr.Dataset) -> xr.Dataset:
     and MPlace."""
     measurement_start = (
         _extract_simulation_start(ds)
-        + ds.ReleaseTstart_end.isel(MPlace=0, ReleaseStartEnd=0).values
+        + ds.ReleaseTstart_end.isel(MPlace=0, ReleaseStartEnd=0).values.astype(
+            "timedelta64[s]"
+        )
     ).astype("datetime64[ns]")
     measurement_end = (
         _extract_simulation_start(ds)
-        + ds.ReleaseTstart_end.isel(MPlace=0, ReleaseStartEnd=1).values
+        + ds.ReleaseTstart_end.isel(MPlace=0, ReleaseStartEnd=1).values.astype(
+            "timedelta64[s]"
+        )
     ).astype("datetime64[ns]")
 
     measurement_x_east = ds.ReleaseXstart_end.isel(MTime=0, ReleaseStartEnd=0).values

@@ -21,6 +21,8 @@ def test_open_and_postprocess(output_directory):
     output = fwo.open_output(output_directory)
     output = output.flexwrf.postprocess()
     assert output.CONC.chunks is None
+    assert (output.MTime.values == output.MTime_start.values).all()
+    assert (output.MTime.values == output.MTime_end.values).all()
 
 
 def test_dask_open_and_postprocess(output_directory):
@@ -29,3 +31,5 @@ def test_dask_open_and_postprocess(output_directory):
     )
     output = output.flexwrf.postprocess()
     assert output.CONC.chunks is not None
+    assert (output.MTime.values == output.MTime_start.values).all()
+    assert (output.MTime.values == output.MTime_end.values).all()
