@@ -32,10 +32,10 @@ def _make_attrs_consistent(ds: xr.Dataset) -> xr.Dataset:
         postprocess.
     """
 
-    assert (ds.south_north == list(range(ds.dims["south_north"]))).all()
-    assert (ds.west_east == list(range(ds.dims["west_east"]))).all()
-    y_center_index = (ds.dims["south_north"] - 1) / 2
-    x_center_index = (ds.dims["west_east"] - 1) / 2
+    assert (ds.south_north == list(range(ds.sizes["south_north"]))).all()
+    assert (ds.west_east == list(range(ds.sizes["west_east"]))).all()
+    y_center_index = (ds.sizes["south_north"] - 1) / 2
+    x_center_index = (ds.sizes["west_east"] - 1) / 2
 
     ds.attrs["CEN_LAT"] = (
         ds.XLAT.interp(south_north=y_center_index, west_east=x_center_index)

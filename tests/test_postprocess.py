@@ -118,10 +118,10 @@ def test_prepare_coordinates(combined_flxout_ds):
     combined_flxout_ds.attrs["SIMULATION_START_TIME"] = 0
     combined_flxout_ds = _prepare_coordinates(combined_flxout_ds)
 
-    assert "z_stag" in combined_flxout_ds.dims
-    assert "MTime" in combined_flxout_ds.dims
-    assert "MPlace" in combined_flxout_ds.dims
-    assert "Time" in combined_flxout_ds.dims
+    assert "z_stag" in combined_flxout_ds.sizes
+    assert "MTime" in combined_flxout_ds.sizes
+    assert "MPlace" in combined_flxout_ds.sizes
+    assert "Time" in combined_flxout_ds.sizes
 
     assert "z_stag" in combined_flxout_ds.coords
     assert "MTime_start" in combined_flxout_ds.coords
@@ -159,5 +159,5 @@ def test_split_releases_into_multiple_dimensions(combined_flxout_ds):
     )
     ds = _assign_time_coord(ds)
     ds = _split_releases_into_multiple_dimensions(ds)
-    assert "MTime" in ds.dims
-    assert "MPlace" in ds.dims
+    assert "MTime" in ds.sizes
+    assert "MPlace" in ds.sizes
