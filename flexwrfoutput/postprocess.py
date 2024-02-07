@@ -93,12 +93,17 @@ def _split_releases_into_multiple_dimensions(ds: xr.Dataset) -> xr.Dataset:
 
     measurement_names = ds.ReleaseName.values
 
-    new_releases_coordinates = pd.MultiIndex.from_arrays(
-        (measurement_times, measurement_names),
-        names=("MTime", "MPlace"),
+    new_releases_coordinates = xr.Coordinates.from_pandas_multiindex(
+        pd.MultiIndex.from_arrays(
+            (measurement_times, measurement_names),
+            names=("MTime", "MPlace"),
+        ),
+        "releases",
     )
 
-    ds = ds.assign_coords(releases=new_releases_coordinates).unstack("releases")
+    ds = ds.assign_coords(releases=new_releases_coordinates["releases"]).unstack(
+        "releases"
+    )
     ds.MTime.attrs[
         "description"
     ] = "Times of measurement for each release (center of release interval)"
